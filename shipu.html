@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f4ef">
+<title>Saybol · 我的食谱</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--text:#242821;--muted:#77786f;--line:#e8e4da;--green:#2f6b4f;--pale:#eaf3ed}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:760px;margin:auto;padding:18px 14px 42px}.hero{padding:12px 3px 18px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:800;color:var(--green)}h1{font-size:32px;margin:8px 0}.hero p{line-height:1.65;color:var(--muted);margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:13px;box-shadow:0 6px 22px #27271a0b}
+label{display:block;font-weight:700;margin:0 0 8px}textarea,input,select{width:100%;border:1px solid #dcd8ce;border-radius:12px;padding:12px;font:inherit;background:white;color:var(--text)}textarea{min-height:88px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.tag{background:var(--pale);color:var(--green);border-radius:20px;padding:7px 10px;font-size:13px}
+.actions{display:flex;gap:8px;margin-top:12px}button{border:0;border-radius:12px;padding:12px 15px;font-weight:700;font-size:15px}.primary{background:var(--green);color:#fff}.secondary{background:#efede7;color:#333}
+.hint,.note{font-size:12px;line-height:1.6;color:var(--muted);margin-top:8px}.recipe h2{font-size:21px;margin:5px 0 7px}.desc{font-size:14px;line-height:1.6;color:var(--muted)}.score{color:var(--green);font-size:12px;font-weight:800}
+.macros{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0}.macro{background:#f7f5f0;border-radius:11px;text-align:center;padding:10px 3px}.macro b{display:block;font-size:16px}.macro span{font-size:11px;color:var(--muted)}
+details{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}summary{font-weight:700}li{line-height:1.75;margin:3px 0}.empty{text-align:center;color:var(--muted);padding:24px 8px}.footer{text-align:center;font-size:12px;color:#999;padding:8px}
+@media(max-width:480px){main{padding:12px 11px 32px}h1{font-size:29px}.row{grid-template-columns:1fr}.card{padding:14px}}
+</style>
+</head>
+<body><main>
+<header class="hero"><div class="eyebrow">SAYBOL · PERSONAL RECIPE</div><h1>今天吃什么？</h1><p>把手头食材填进来，生成简单的家常菜方案，并查看每餐营养估算和详细做法。</p></header>
+<section class="card">
+<label for="ingredients">我现在有这些食材</label>
+<textarea id="ingredients" placeholder="例如：鸡腿肉、虾仁、西兰花、青椒、番茄"></textarea>
+<div class="tags">
+<button class="tag" type="button" data-add="鸡胸肉">＋鸡胸肉</button><button class="tag" type="button" data-add="鸡腿肉">＋鸡腿肉</button><button class="tag" type="button" data-add="虾仁">＋虾仁</button><button class="tag" type="button" data-add="西兰花">＋西兰花</button><button class="tag" type="button" data-add="青椒">＋青椒</button><button class="tag" type="button" data-add="彩椒">＋彩椒</button><button class="tag" type="button" data-add="土豆">＋土豆</button><button class="tag" type="button" data-add="番茄">＋番茄</button><button class="tag" type="button" data-add="胡萝卜">＋胡萝卜</button>
+</div>
+<div class="row"><div><label for="staple">主食</label><select id="staple"><option value="none">不额外加主食</option><option value="pasta">意大利面 60g（干重）</option><option value="buckwheat">荞麦面 60g（干重）</option><option value="potato">土豆 200g</option><option value="rice">即食糙米饭 80g</option></select></div>
+<div><label for="oil">烹调油</label><select id="oil"><option value="5">5g</option><option value="8">8g</option><option value="10">10g</option></select></div></div>
+<div class="row"><div><label for="target">每餐热量目标（kcal）</label><input id="target" type="number" min="300" max="1000" value="600"></div><div><label for="proteinTarget">蛋白质目标（g）</label><input id="proteinTarget" type="number" min="15" max="80" value="40"></div></div>
+<div class="actions"><button class="primary" id="generate" type="button">生成食谱</button><button class="secondary" id="clear" type="button">清空</button></div>
+<div class="hint">不需要把所有食材都用上。营养数值是估算值，实际会受食材品牌、生熟重量和烹调方式影响。</div>
+</section>
+<section id="results"><div class="card empty">先输入食材，再点击“生成食谱”。</div></section>
+<div class="footer">Saybol · 在本机浏览器中运行，食材输入不会上传</div>
+</main>
+<script>
+const DB={
+"鸡胸肉":{k:120,p:23,c:0,f:2.5,g:160},"鸡腿肉":{k:170,p:18,c:0,f:11,g:150},"虾仁":{k:85,p:18,c:.2,f:.8,g:150},
+"西兰花":{k:34,p:2.8,c:6.6,f:.4,g:150},"彩椒":{k:26,p:1,c:6,f:.3,g:80},"青椒":{k:22,p:1,c:4.6,f:.2,g:80},
+"番茄":{k:18,p:.9,c:3.9,f:.2,g:150},"胡萝卜":{k:41,p:.9,c:9.6,f:.2,g:70},"洋葱":{k:40,p:1.1,c:9.3,f:.1,g:50},"土豆":{k:77,p:2,c:17,f:.1,g:200},
+"意大利面":{k:350,p:13,c:72,f:1.5,g:60},"荞麦面":{k:340,p:12,c:70,f:2,g:60},"糙米饭":{k:125,p:2.6,c:26,f:1,g:80}
+};
+const ALIAS={"鸡胸":"鸡胸肉","鸡腿":"鸡腿肉","虾":"虾仁","螺丝椒":"青椒","菜椒":"彩椒","甜椒":"彩椒","西红柿":"番茄","皮牙子":"洋葱"};
+const $=id=>document.getElementById(id);
+function parseIngredients(){return $("ingredients").value.split(/[，,、\s]+/).map(s=>ALIAS[s.trim()]||s.trim()).filter(s=>s&&DB[s])}
+function calc(name,g){let x=DB[name];return {name,g,k:x.k*g/100,p:x.p*g/100,c:x.c*g/100,f:x.f*g/100}}
+function sum(items){return items.reduce((s,x)=>({k:s.k+x.k,p:s.p+x.p,c:s.c+x.c,f:s.f+x.f}),{k:0,p:0,c:0,f:0})}
+function makeRecipe(title,desc,protein,vegs,staple,oil,steps){
+ let items=[calc(protein,DB[protein].g)];vegs.forEach(v=>items.push(calc(v,DB[v].g)));
+ const st={"pasta":["意大利面",60],"buckwheat":["荞麦面",60],"potato":["土豆",200],"rice":["糙米饭",80]}[staple];
+ if(st)items.push(calc(st[0],st[1]));items.push({name:"烹调油",g:+oil,k:+oil*9,p:0,c:0,f:+oil});
+ return {title,desc,items,n:sum(items),steps};
+}
+function generate(){
+ const ings=parseIngredients(),staple=$("staple").value,oil=$("oil").value;
+ if(!ings.length){$("results").innerHTML='<div class="card empty">请至少输入一种已支持的食材，例如鸡腿肉、西兰花、青椒。</div>';return}
+ const has=n=>ings.includes(n),vegs=ings.filter(n=>["西兰花","彩椒","青椒","番茄","胡萝卜","洋葱"].includes(n));
+ let recipes=[];
+ if(has("鸡胸肉")&&has("西兰花"))recipes.push(makeRecipe("黑椒鸡胸西兰花","鸡胸肉配西兰花，简单的一锅焖炒。","鸡胸肉",["西兰花",...vegs.filter(v=>v!=="西兰花").slice(0,1)],staple,oil,["鸡胸肉切成约2厘米小块，加少量生抽和黑胡椒抓匀，腌10分钟。","锅烧热后加油，鸡肉摊开中火炒约2分钟，再翻面炒至表面变白。","加入胡萝卜等较硬的蔬菜炒1分钟，再放西兰花。","沿锅边加入约50–70ml水，盖盖中火焖2–3分钟。","开盖收汁，按口味补少量生抽和黑胡椒；确认鸡肉中心完全熟透。"]));
+ if(has("鸡腿肉")&&has("番茄"))recipes.push(makeRecipe("番茄鸡腿肉","番茄炒出汁，拌面吃很合适。","鸡腿肉",["番茄",...vegs.filter(v=>v!=="番茄").slice(0,1)],staple,oil,["鸡腿肉切丁，加少量生抽和黑胡椒抓匀，腌10分钟。","番茄切小块，其他蔬菜切成易熟的小块。","锅热加油，鸡腿肉中火炒至表面变色。","加入番茄炒到出汁，再加入其他蔬菜。","加约50ml水，盖盖焖2分钟，再开盖收汁。","若搭配面条，最后加入煮好的面翻拌约1分钟；尝味后再补生抽。"]));
+ if(has("虾仁")&&(has("彩椒")||has("青椒")))recipes.push(makeRecipe("彩椒黑椒虾仁","虾仁熟得快，适合想快点吃饭的时候。","虾仁",[has("彩椒")?"彩椒":"青椒",...vegs.filter(v=>!["彩椒","青椒"].includes(v)).slice(0,1)],staple,oil,["虾仁完全解冻后擦干，用黑胡椒抓匀。","锅热加油，虾仁中大火炒约1分钟，变粉白后先盛出。","原锅加入青椒或彩椒及其他蔬菜，炒1–2分钟。","加入少量生抽和约30ml水，翻炒至蔬菜断生。","放回虾仁；如果配面，加入煮好的面大火翻拌30–60秒。"]));
+ if(!recipes.length){
+  let protein=has("鸡腿肉")?"鸡腿肉":has("鸡胸肉")?"鸡胸肉":has("虾仁")?"虾仁":null;
+  if(!protein){$("results").innerHTML='<div class="card empty">我识别到的食材里没有鸡肉或虾仁。你可以补充鸡胸肉、鸡腿肉或虾仁，也可以把食材名称写得更完整。</div>';return}
+  recipes.push(makeRecipe("家常肉类蔬菜焖炒","按现有食材做一锅简单家常菜。",protein,vegs.slice(0,2),staple,oil,["肉切成容易熟的小块，加少量生抽和黑胡椒腌10分钟。","锅热加油，肉下锅炒至表面变色。","先加胡萝卜等较硬的菜，翻炒1分钟，再加入其他蔬菜。","加约50ml水，盖盖焖2–4分钟，直到肉熟、蔬菜断生。","开盖收汁，最后尝味再补少量生抽。"]));
+ }
+ const target=+$("target").value||600,pt=+$("proteinTarget").value||40;
+ recipes.sort((a,b)=>(Math.abs(a.n.k-target)+Math.abs(a.n.p-pt)*3)-(Math.abs(b.n.k-target)+Math.abs(b.n.p-pt)*3));
+ $("results").innerHTML=recipes.map(r=>'<article class="card recipe"><div class="score">按你的热量与蛋白质目标排序</div><h2>'+r.title+'</h2><div class="desc">'+r.desc+'</div><div class="macros"><div class="macro"><b>'+Math.round(r.n.k)+'</b><span>kcal</span></div><div class="macro"><b>'+r.n.p.toFixed(1)+'g</b><span>蛋白质</span></div><div class="macro"><b>'+r.n.c.toFixed(1)+'g</b><span>碳水</span></div><div class="macro"><b>'+r.n.f.toFixed(1)+'g</b><span>脂肪</span></div></div><details open><summary>食材用量</summary><ul>'+r.items.map(x=>'<li>'+x.name+'：'+x.g+'g</li>').join("")+'</ul></details><details open><summary>从头到尾的做法</summary><ol>'+r.steps.map(s=>'<li>'+s+'</li>').join("")+'</ol></details></article>').join("");
+}
+document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>{$("ingredients").value+=($("ingredients").value?"、":"")+b.dataset.add}));
+$("generate").addEventListener("click",generate);
+$("clear").addEventListener("click",()=>{$("ingredients").value="";$("results").innerHTML='<div class="card empty">先输入食材，再点击“生成食谱”。</div>'});
+</script></body></html>
